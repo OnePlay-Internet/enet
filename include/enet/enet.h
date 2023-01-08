@@ -63,6 +63,7 @@ typedef enum _ENetSocketOption
    ENET_SOCKOPT_ERROR,
    ENET_SOCKOPT_NODELAY,
    ENET_SOCKOPT_QOS,
+   ENET_SOCKOPT_TTL,
 } ENetSocketOption;
 
 typedef enum _ENetSocketShutdown
