@@ -163,6 +163,7 @@ typedef struct _ENetOutgoingCommand
    enet_uint32  fragmentOffset;
    enet_uint16  fragmentLength;
    enet_uint16  sendAttempts;
+   enet_uint32  queueTime;
    ENetProtocol command;
    ENetPacket * packet;
 } ENetOutgoingCommand;
@@ -307,6 +308,7 @@ typedef struct _ENetPeer
    ENetList      sentReliableCommands;
    ENetList      sentUnreliableCommands;
    ENetList      outgoingCommands;
+   ENetList      outgoingSendReliableCommands;
    ENetList      dispatchedCommands;
    enet_uint16   flags;
    enet_uint16   reserved;
@@ -391,6 +393,7 @@ typedef struct _ENetHost
    size_t               duplicatePeers;              /**< optional number of allowed peers from duplicate IPs, defaults to ENET_PROTOCOL_MAXIMUM_PEER_ID */
    size_t               maximumPacketSize;           /**< the maximum allowable packet size that may be sent or received on a peer */
    size_t               maximumWaitingData;          /**< the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered */
+   enet_uint32          totalQueued;
 } ENetHost;
 
 /**
@@ -554,6 +557,7 @@ ENET_API void                enet_peer_disconnect_later (ENetPeer *, enet_uint32
 ENET_API void                enet_peer_throttle_configure (ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
 extern int                   enet_peer_throttle (ENetPeer *, enet_uint32);
 extern void                  enet_peer_reset_queues (ENetPeer *);
+extern int                   enet_peer_has_outgoing_commands (ENetPeer *);
 extern void                  enet_peer_setup_outgoing_command (ENetPeer *, ENetOutgoingCommand *);
 extern ENetOutgoingCommand * enet_peer_queue_outgoing_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32, enet_uint16);
 extern ENetIncomingCommand * enet_peer_queue_incoming_command (ENetPeer *, const ENetProtocol *, const void *, size_t, enet_uint32, enet_uint32);
