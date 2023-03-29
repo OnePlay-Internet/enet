@@ -218,6 +218,7 @@ enum
    ENET_PEER_TIMEOUT_LIMIT                = 32,
    ENET_PEER_TIMEOUT_MINIMUM              = 5000,
    ENET_PEER_TIMEOUT_MAXIMUM              = 30000,
+   ENET_PEER_TIMEOUT_LINEAR               = 100,
    ENET_PEER_PING_INTERVAL                = 500,
    ENET_PEER_UNSEQUENCED_WINDOWS          = 64,
    ENET_PEER_UNSEQUENCED_WINDOW_SIZE      = 1024,
@@ -290,6 +291,7 @@ typedef struct _ENetPeer
    enet_uint32   timeoutLimit;
    enet_uint32   timeoutMinimum;
    enet_uint32   timeoutMaximum;
+   enet_uint32   timeoutLinear;       /**< round trip timeout increases by a multiply of 2 until this parameter is reached. After that, the linear */
    enet_uint32   lastRoundTripTime;
    enet_uint32   lowestRoundTripTime;
    enet_uint32   lastRoundTripTimeVariance;
@@ -543,6 +545,7 @@ ENET_API ENetPacket *        enet_peer_receive (ENetPeer *, enet_uint8 * channel
 ENET_API void                enet_peer_ping (ENetPeer *);
 ENET_API void                enet_peer_ping_interval (ENetPeer *, enet_uint32);
 ENET_API void                enet_peer_timeout (ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
+ENET_API void                enet_peer_timeout_linear (ENetPeer *, enet_uint32);
 ENET_API void                enet_peer_reset (ENetPeer *);
 ENET_API void                enet_peer_disconnect (ENetPeer *, enet_uint32);
 ENET_API void                enet_peer_disconnect_now (ENetPeer *, enet_uint32);

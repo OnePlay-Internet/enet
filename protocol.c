@@ -1351,11 +1351,16 @@ enet_protocol_check_timeouts (ENetHost * host, ENetPeer * peer, ENetEvent * even
            ENET_TIME_LESS (outgoingCommand -> sentTime, peer -> earliestTimeout))
          peer -> earliestTimeout = outgoingCommand -> sentTime;
 
+       enet_uint32 time_diff = ENET_TIME_DIFFERENCE (host -> serviceTime, peer -> earliestTimeout);
        if (peer -> earliestTimeout != 0 &&
-             (ENET_TIME_DIFFERENCE (host -> serviceTime, peer -> earliestTimeout) >= peer -> timeoutMaximum ||
+             (time_diff >= peer -> timeoutMaximum ||
                (outgoingCommand -> roundTripTimeout >= outgoingCommand -> roundTripTimeoutLimit &&
-                 ENET_TIME_DIFFERENCE (host -> serviceTime, peer -> earliestTimeout) >= peer -> timeoutMinimum)))
+                 time_diff >= peer -> timeoutMinimum)))
        {
+#ifdef ENET_DEBUG_TIMEOUT
+          printf ("RoundTrip Timeout. Will disconnect. outgoingCommand->roundTripTimeout = %u, outgoingCommand->sentTime = %u, host -> serviceTime = %u, time_diff = %u, attempts = %u\n",
+                  outgoingCommand->roundTripTimeout, outgoingCommand->sentTime, host->serviceTime, time_diff, outgoingCommand->sendAttempts);
+#endif
           enet_protocol_notify_disconnect (host, peer, event);
 
           return 1;
@@ -1363,10 +1368,22 @@ enet_protocol_check_timeouts (ENetHost * host, ENetPeer * peer, ENetEvent * even
 
        if (outgoingCommand -> packet != NULL)
          peer -> reliableDataInTransit -= outgoingCommand -> fragmentLength;
-          
+
        ++ peer -> packetsLost;
 
-       outgoingCommand -> roundTripTimeout *= 2;
+#ifdef ENET_DEBUG_TIMEOUT
+       printf ("Packet lost. total packets lost: %u, roundTripTimeout = %u, attempts = %u\n",
+               peer->packetLoss, outgoingCommand->roundTripTimeout, outgoingCommand->sendAttempts);
+#endif
+
+       if (peer->timeoutLinear == 0 || outgoingCommand -> roundTripTimeout <= peer->timeoutLinear) {
+         outgoingCommand -> roundTripTimeout *= 2;
+       }
+       else {
+         // increase roundTripTimeout lineary after peer->timeoutLinearFrom
+         outgoingCommand -> roundTripTimeout += ENET_MAX (peer -> roundTripTime + 4 * ENET_MAX (1, peer -> roundTripTimeVariance), peer->timeoutLinear);
+       }
+
        if (outgoingCommand -> roundTripTimeout > outgoingCommand -> roundTripTimeoutLimit)
          outgoingCommand -> roundTripTimeout = outgoingCommand -> roundTripTimeoutLimit;
 
