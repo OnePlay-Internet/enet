@@ -414,6 +414,7 @@ enet_peer_reset (ENetPeer * peer)
     peer -> timeoutLimit = ENET_PEER_TIMEOUT_LIMIT;
     peer -> timeoutMinimum = ENET_PEER_TIMEOUT_MINIMUM;
     peer -> timeoutMaximum = ENET_PEER_TIMEOUT_MAXIMUM;
+    peer -> timeoutLinear = ENET_PEER_TIMEOUT_LINEAR;
     peer -> lastRoundTripTime = ENET_PEER_DEFAULT_ROUND_TRIP_TIME;
     peer -> lowestRoundTripTime = ENET_PEER_DEFAULT_ROUND_TRIP_TIME;
     peer -> lastRoundTripTimeVariance = 0;
@@ -481,7 +482,7 @@ enet_peer_ping_interval (ENetPeer * peer, enet_uint32 pingInterval)
     period, the peer will be disconnected. Alternatively, if reliable packets have been sent
     but not acknowledged for a certain maximum time period, the peer will be disconnected regardless
     of the current timeout limit value.
-    
+
     @param peer the peer to adjust
     @param timeoutLimit the timeout limit; defaults to ENET_PEER_TIMEOUT_LIMIT if 0
     @param timeoutMinimum the timeout minimum; defaults to ENET_PEER_TIMEOUT_MINIMUM if 0
@@ -494,6 +495,26 @@ enet_peer_timeout (ENetPeer * peer, enet_uint32 timeoutLimit, enet_uint32 timeou
     peer -> timeoutLimit = timeoutLimit ? timeoutLimit : ENET_PEER_TIMEOUT_LIMIT;
     peer -> timeoutMinimum = timeoutMinimum ? timeoutMinimum : ENET_PEER_TIMEOUT_MINIMUM;
     peer -> timeoutMaximum = timeoutMaximum ? timeoutMaximum : ENET_PEER_TIMEOUT_MAXIMUM;
+}
+
+/** Sets the timeout additional parameters for a peer.
+
+    For networks with high latency, sometimes doubling the round trip timeout is impractical.
+    If the network delay is 300ms and you double it, you have a 600ms timeout.
+    But the ping is configured to check every 0.5s. You will not be able to resend ping
+    and the connection will be terminated.
+    To avoid this, the round-trip timeout will double until it reaches timeoutLinear.
+    After that, it will grow linearly.
+    To disable this behavior, simply set it to be the same or greater than timeoutMaximum.
+
+    @param peer the peer to adjust
+    @param timeoutLinear the timeout limit after it timeout will grow linear; defaults to ENET_PEER_TIMEOUT_LINEAR if 0
+*/
+
+void
+enet_peer_timeout_linear (ENetPeer * peer, enet_uint32 timeoutLinear)
+{
+    peer -> timeoutLinear = timeoutLinear ? timeoutLinear : ENET_PEER_TIMEOUT_LINEAR;
 }
 
 /** Force an immediate disconnection from a peer.
