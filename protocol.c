@@ -1376,7 +1376,11 @@ enet_protocol_check_timeouts (ENetHost * host, ENetPeer * peer, ENetEvent * even
        {
 #ifdef ENET_DEBUG_TIMEOUT
           printf ("RoundTrip Timeout. Will disconnect. outgoingCommand->roundTripTimeout = %u, outgoingCommand->sentTime = %u, host -> serviceTime = %u, time_diff = %u, attempts = %u\n",
-                  outgoingCommand->roundTripTimeout, outgoingCommand->sentTime, host->serviceTime, time_diff, outgoingCommand->sendAttempts);
+                  outgoingCommand -> roundTripTimeout,
+                  outgoingCommand -> sentTime,
+                  host -> serviceTime,
+                  time_diff,
+                  outgoingCommand -> sendAttempts);
 #endif
           enet_protocol_notify_disconnect (host, peer, event);
 
@@ -1387,6 +1391,16 @@ enet_protocol_check_timeouts (ENetHost * host, ENetPeer * peer, ENetEvent * even
 
        roundTripTimeout = peer -> roundTripTime + 4 * ENET_MAX (1, peer -> roundTripTimeVariance);
        roundTripTimeout = ENET_MIN (roundTripTimeout, peer->timeoutMaximum / 5);
+#ifdef ENET_DEBUG_TIMEOUT
+       printf ("Peer packets lost %u: %u ms round trip time, %u outgoing, %u/%u incoming, attempts = %u\n\n",
+              peer -> packetLoss,
+              peer -> roundTripTime,
+              enet_list_size (& peer -> outgoingCommands),
+              peer -> channels != NULL ? enet_list_size (& peer -> channels -> incomingReliableCommands) : 0,
+              peer -> channels != NULL ? enet_list_size (& peer -> channels -> incomingUnreliableCommands) : 0,
+              outgoingCommand -> sendAttempts);
+#endif
+
        if (peer->timeoutLinear == 0 || outgoingCommand -> roundTripTimeout <= peer->timeoutLinear) {
         if (outgoingCommand -> sendAttempts < peer -> timeoutLimit)
             outgoingCommand -> roundTripTimeout = roundTripTimeout * ENET_MAX (1, outgoingCommand -> sendAttempts);
