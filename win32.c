@@ -347,6 +347,10 @@ enet_socket_set_option (ENetSocket socket, ENetSocketOption option, int value)
             break;
         }
 
+        case ENET_SOCKOPT_TTL:
+            result = setsockopt (socket, IPPROTO_IP, IP_TTL, (char *) & value, sizeof (int));
+            break;
+
         default:
             break;
     }
@@ -362,6 +366,11 @@ enet_socket_get_option (ENetSocket socket, ENetSocketOption option, int * value)
         case ENET_SOCKOPT_ERROR:
             len = sizeof(int);
             result = getsockopt (socket, SOL_SOCKET, SO_ERROR, (char *) value, & len);
+            break;
+
+        case ENET_SOCKOPT_TTL:
+            len = sizeof(int);
+            result = getsockopt (socket, IPPROTO_IP, IP_TTL, (char *) value, & len);
             break;
 
         default:
@@ -525,13 +534,15 @@ enet_socket_receive (ENetSocket socket,
        case WSAEWOULDBLOCK:
        case WSAECONNRESET:
           return 0;
+       case WSAEMSGSIZE:
+          return -2;
        }
 
        return -1;
     }
 
     if (msg.dwFlags & MSG_PARTIAL)
-      return -1;
+      return -2;
 
     // Retrieve the local address that this traffic was received on
     // to ensure we respond from the correct address/interface.
